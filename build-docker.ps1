@@ -1,18 +1,24 @@
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
-    Top-level helper that invokes docker-pi-hole/build.ps1 if present.
+    PowerShell wrapper for build.sh to build Pi-hole Docker images on Windows.
 
 .DESCRIPTION
-    If `docker-pi-hole/build.ps1` exists relative to the repository root,
-    this script forwards all arguments to it. If the `-l` or `--local`
-    switch is present, the script will first build FTL by invoking
-    `build-ftl.ps1` in the repository root, then continue to the docker
-    build.
+    Executes build.sh in a Docker container from the docker-pi-hole directory.
+    If the `-l` or `--local` switch is present, the script will first build FTL 
+    by invoking `build-ftl.ps1` in the repository root, then continue to the 
+    docker build.
+
+.NOTES
+    Run .\build-docker.ps1 --help for full usage details.
 #>
 
-# Determine the per-directory wrapper
-$wrapper = Join-Path $PSScriptRoot 'docker-pi-hole' | Join-Path -ChildPath 'build.ps1'
+
+# Check Docker is available
+if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
+    Write-Host "Error: Docker is required. Install from https://www.docker.com/products/docker-desktop"
+    exit 1
+}
 
 # Check for -l/--local in the arguments
 $hasLocal = $false
@@ -38,12 +44,29 @@ if ($hasLocal) {
     Write-Host "FTL build completed successfully. Continuing to docker build."
 }
 
-if (Test-Path $wrapper) {
-    Write-Host "Invoking $wrapper"
-    & $wrapper @args
-    exit $LASTEXITCODE
-} else {
-    Write-Host "Could not find docker-pi-hole/build.ps1."
-    Write-Host "Please run the script from the repository root or ensure docker-pi-hole/build.ps1 exists."
+
+# Set the docker-pi-hole directory as the working directory
+$dockerPiHoleDir = Join-Path $PSScriptRoot 'docker-pi-hole'
+if (-not (Test-Path $dockerPiHoleDir)) {
+    Write-Host "Could not find docker-pi-hole directory."
+    Write-Host "Please run the script from the repository root or ensure docker-pi-hole directory exists."
     exit 2
 }
+
+# Convert Windows path to Unix-style for Docker volume mount
+$workDir = $dockerPiHoleDir -replace '\\', '/' -replace '^([A-Za-z]):', '/$1'
+
+# Build command with escaped arguments
+$bashCommand = "bash build.sh " + ($args | ForEach-Object { if ($_ -match '\s') { "'$_'" } else { $_ } }) -join ' '
+
+Write-Host "Executing: $bashCommand"
+
+# Run build.sh in docker:cli container
+docker run --rm `
+    -v "${dockerPiHoleDir}:${workDir}" `
+    -v /var/run/docker.sock:/var/run/docker.sock `
+    -w "${workDir}" `
+    docker:cli `
+    sh -c "apk add -q bash dos2unix curl && dos2unix build.sh 2>/dev/null; $bashCommand"
+
+exit $LASTEXITCODE
