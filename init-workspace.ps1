@@ -60,6 +60,13 @@ function Initialize-Repository {
         
         if ($currentBranch -eq "development") {
             Write-Host "  Already on development branch" -ForegroundColor Green
+            
+            # Pull latest changes
+            Write-Host "  Pulling latest changes..." -ForegroundColor Cyan
+            git pull origin development
+            if ($LASTEXITCODE -ne 0) {
+                Write-Warning "Failed to pull latest changes for $Name"
+            }
         } else {
             # Check for unstaged/staged changes
             $gitStatus = git status --porcelain
@@ -82,6 +89,13 @@ function Initialize-Repository {
                 
                 if ($LASTEXITCODE -ne 0) {
                     Write-Warning "Failed to checkout development branch for $Name, staying on current branch"
+                } else {
+                    # Pull latest changes after successful checkout
+                    Write-Host "  Pulling latest changes..." -ForegroundColor Cyan
+                    git pull origin development
+                    if ($LASTEXITCODE -ne 0) {
+                        Write-Warning "Failed to pull latest changes for $Name"
+                    }
                 }
             }
         }
