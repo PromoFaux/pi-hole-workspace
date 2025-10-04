@@ -39,7 +39,7 @@ function Initialize-Repository {
     Write-Host "Processing repository: $Name" -ForegroundColor Yellow
     
     if (Test-Path $Name) {
-        Write-Host "  Directory $Name already exists, skipping clone..." -ForegroundColor Orange
+        Write-Host "  Directory $Name already exists, skipping clone..." -ForegroundColor DarkYellow
         Set-Location $Name
     } else {
         Write-Host "  Cloning $Url..." -ForegroundColor Cyan
@@ -51,14 +51,39 @@ function Initialize-Repository {
         Set-Location $Name
     }
     
-    # Check if development branch exists
+    # Check if development branch exists remotely
     $branchExists = git branch -r --list "origin/development" | Where-Object { $_.Trim() -eq "origin/development" }
     
     if ($branchExists) {
-        Write-Host "  Checking out development branch..." -ForegroundColor Cyan
-        git checkout development
-        if ($LASTEXITCODE -ne 0) {
-            Write-Warning "Failed to checkout development branch for $Name, staying on current branch"
+        # Check current branch
+        $currentBranch = git branch --show-current
+        
+        if ($currentBranch -eq "development") {
+            Write-Host "  Already on development branch" -ForegroundColor Green
+        } else {
+            # Check for unstaged/staged changes
+            $gitStatus = git status --porcelain
+            
+            if ($gitStatus) {
+                Write-Warning "Repository $Name has unstaged/staged changes. Skipping checkout to avoid data loss."
+                Write-Host "  Current branch: $currentBranch" -ForegroundColor Gray
+                Write-Host "  To manually switch: 'git stash && git checkout development && git stash pop'" -ForegroundColor Gray
+            } else {
+                Write-Host "  Checking out development branch..." -ForegroundColor Cyan
+                
+                # Check if local development branch exists
+                $localDevExists = git branch --list "development" | Where-Object { $_.Trim() -eq "development" -or $_.Trim() -eq "* development" }
+                
+                if ($localDevExists) {
+                    git checkout development
+                } else {
+                    git checkout -b development origin/development
+                }
+                
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Warning "Failed to checkout development branch for $Name, staying on current branch"
+                }
+            }
         }
     } else {
         Write-Warning "Development branch not found for $Name, staying on current branch"
