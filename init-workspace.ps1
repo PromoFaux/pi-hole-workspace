@@ -26,6 +26,14 @@ $repositories = @(
     @{
         Name = "PADD"
         Url = "git@github.com:pi-hole/PADD.git"
+    },
+    @{
+        Name = "docs"
+        Url = "git@github.com:pi-hole/docs.git"
+    },
+    @{
+        Name = "docker-base-images"
+        Url = "git@github.com:pi-hole/docker-base-images.git"
     }
 )
 
