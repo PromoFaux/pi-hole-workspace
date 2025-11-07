@@ -38,42 +38,26 @@ if (-not $Quiet) {
 
 # Define repositories to clone
 $repositories = @(
-    @{
-        Name = "pi-hole"
-        SshUrl = "git@github.com:pi-hole/pi-hole.git"
-        HttpsUrl = "https://github.com/pi-hole/pi-hole.git"
-    },
-    @{
-        Name = "FTL"
-        SshUrl = "git@github.com:pi-hole/FTL.git"
-        HttpsUrl = "https://github.com/pi-hole/FTL.git"
-    },
-    @{
-        Name = "web"
-        SshUrl = "git@github.com:pi-hole/web.git"
-        HttpsUrl = "https://github.com/pi-hole/web.git"
-    },
-    @{
-        Name = "docker-pi-hole"
-        SshUrl = "git@github.com:pi-hole/docker-pi-hole.git"
-        HttpsUrl = "https://github.com/pi-hole/docker-pi-hole.git"
-    },
-    @{
-        Name = "PADD"
-        SshUrl = "git@github.com:pi-hole/PADD.git"
-        HttpsUrl = "https://github.com/pi-hole/PADD.git"
-    },
-    @{
-        Name = "docs"
-        SshUrl = "git@github.com:pi-hole/docs.git"
-        HttpsUrl = "https://github.com/pi-hole/docs.git"
-    },
-    @{
-        Name = "docker-base-images"
-        SshUrl = "git@github.com:pi-hole/docker-base-images.git"
-        HttpsUrl = "https://github.com/pi-hole/docker-base-images.git"
-    }
+    "pi-hole/pi-hole",
+    "pi-hole/FTL",
+    "pi-hole/web",
+    "pi-hole/docker-pi-hole",
+    "pi-hole/PADD",
+    "pi-hole/docs",
+    "pi-hole/docker-base-images"
 )
+
+# Function to build repository URLs
+function Get-RepositoryUrls {
+    param(
+        [string]$Repo
+    )
+    
+    return @{
+        SshUrl = "git@github.com:$Repo.git"
+        HttpsUrl = "https://github.com/$Repo.git"
+    }
+}
 
 # Function to clone repository and checkout development branch
 function Initialize-Repository {
@@ -81,9 +65,13 @@ function Initialize-Repository {
         [string]$Name,
         [string]$SshUrl,
         [string]$HttpsUrl,
+        [bool]$UseFallbackHttps,
         [bool]$Force,
         [bool]$Quiet
     )
+    
+    # Determine which URL to use for cloning
+    $cloneUrl = $UseFallbackHttps ? $HttpsUrl : $SshUrl
     
     if (-not $Quiet) {
         Write-Host "Processing repository: $Name" -ForegroundColor Yellow
@@ -96,20 +84,13 @@ function Initialize-Repository {
         Set-Location $Name
     } else {
         if (-not $Quiet) {
-            Write-Host "  Cloning from $SshUrl..." -ForegroundColor Cyan
+            Write-Host "  Cloning from $cloneUrl..." -ForegroundColor Cyan
         }
         
-        # Try SSH first
-        git clone $SshUrl $Name 2>$null
+        git clone $cloneUrl $Name
         if ($LASTEXITCODE -ne 0) {
-            if (-not $Quiet) {
-                Write-Host "  SSH clone failed, falling back to HTTPS..." -ForegroundColor Yellow
-            }
-            git clone $HttpsUrl $Name
-            if ($LASTEXITCODE -ne 0) {
-                Write-Error "Failed to clone $Name using both SSH and HTTPS"
-                return $false
-            }
+            Write-Error "Failed to clone $Name"
+            return $false
         }
         Set-Location $Name
     }
@@ -268,10 +249,30 @@ if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
+# Check SSH connection to GitHub and determine if we should use HTTPS fallback
+$useFallbackHttps = $false
+if (-not $Quiet) {
+    Write-Host "Checking SSH connection to GitHub..." -ForegroundColor Yellow
+}
+
+ssh -T git@github.com 2>&1 | Out-Null
+if ($LASTEXITCODE -ne 1) {  # SSH to GitHub returns exit code 1 on successful auth
+    $useFallbackHttps = $true
+    if (-not $Quiet) {
+        Write-Host "SSH authentication failed, will use HTTPS for cloning" -ForegroundColor Yellow
+    }
+} else {
+    if (-not $Quiet) {
+        Write-Host "SSH authentication successful" -ForegroundColor Green
+    }
+}
+
 # Clone each repository
 $successCount = 0
 foreach ($repo in $repositories) {
-    if (Initialize-Repository -Name $repo.Name -SshUrl $repo.SshUrl -HttpsUrl $repo.HttpsUrl -Force $Force -Quiet $Quiet) {
+    $repoName = $repo.Split('/')[-1]
+    $urls = Get-RepositoryUrls -Repo $repo
+    if (Initialize-Repository -Name $repoName -SshUrl $urls.SshUrl -HttpsUrl $urls.HttpsUrl -UseFallbackHttps $useFallbackHttps -Force $Force -Quiet $Quiet) {
         $successCount++
     }
 }
