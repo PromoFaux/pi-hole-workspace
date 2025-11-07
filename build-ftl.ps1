@@ -5,11 +5,14 @@
 
 .DESCRIPTION
     Builds Pi-hole FTL in the official build container and copies the binary
-    to docker-pi-hole/src/pihole-FTL for use with build.ps1 -l
+    to docker-pi-hole/src/pihole-FTL for use with build-docker.ps1 -Local
 
     This script searches upward from its location to find the repository's
     FTL/ directory, so it will continue to work if you move it around inside
     the repository.
+
+.PARAMETER Help
+    Display this help information.
 
 .EXAMPLE
     .\build-ftl.ps1
@@ -19,14 +22,28 @@
     .\build-ftl.ps1 clean
     Clean the build directory before building
 
+.EXAMPLE
+    .\build-ftl.ps1 -Help
+    Show this help information
+
 .NOTES
-    Run .\build-ftl.ps1 help for all available build.sh options
+    Run .\build-ftl.ps1 help to see all available build.sh options
 #>
+
+param(
+    [switch]$Help
+)
 
 # Check Docker is available
 if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
-    Write-Host "Error: Docker is required. Install from https://www.docker.com/products/docker-desktop"
+    Write-Error "Docker is required. Install from https://www.docker.com/products/docker-desktop"
     exit 1
+}
+
+# Handle help request
+if ($Help -or $args -contains '--help' -or $args -contains '-h' -or $args -contains 'help') {
+    Get-Help $MyInvocation.MyCommand.Path -Full
+    exit 0
 }
 
 # Search upward for the FTL directory (repo root/FTL)
@@ -43,20 +60,20 @@ for ($i = 0; $i -lt $maxLevels; $i++) {
 }
 
 if (-not $ftlDir) {
-    Write-Host "Error: FTL directory not found."
-    Write-Host "Please clone the FTL repository into the repository root:"
-    Write-Host "  git clone https://github.com/pi-hole/FTL.git"
+    Write-Error "FTL directory not found."
+    Write-Error "Please clone the FTL repository into the repository root:"
+    Write-Host "  git clone https://github.com/pi-hole/FTL.git" -ForegroundColor Cyan
     exit 1
 }
 
 # Check FTL/build.sh exists
 if (-not (Test-Path (Join-Path $ftlDir 'build.sh'))) {
-    Write-Host "Error: FTL/build.sh not found. Is this a valid FTL repository?"
+    Write-Error "FTL/build.sh not found. Is this a valid FTL repository?"
     exit 1
 }
 
-Write-Host "Building FTL using official build container..."
-Write-Host "FTL directory: $ftlDir"
+Write-Host "Building FTL using official build container..." -ForegroundColor Green
+Write-Host "FTL directory: $ftlDir" -ForegroundColor Cyan
 Write-Host ""
 
 # Convert Windows path to Unix-style for Docker volume mount
@@ -78,6 +95,9 @@ $bashCommand = "bash build.sh " + ($args -join ' ')
 
 # Run build.sh in the official FTL build container
 # Set CI_ARCH=linux/amd64 since we're building on x86-64 (Windows/Docker Desktop)
+Write-Host "Executing: $bashCommand" -ForegroundColor Cyan
+Write-Host ""
+
 docker run --rm `
     -e CI_ARCH=linux/amd64 `
     -v "${ftlDir}:${workDir}" `
@@ -85,35 +105,38 @@ docker run --rm `
     ghcr.io/pi-hole/ftl-build:nightly `
     bash -c "dos2unix build.sh 2>/dev/null; $bashCommand"
 
-if ($LASTEXITCODE -eq 0) {
-    # Copy the built binary to docker-pi-hole/src/
-    # The build script may place the binary in the FTL root directory
-    $ftlBinary = Join-Path $ftlDir 'pihole-FTL'
-    if (Test-Path $ftlBinary) {
-        Write-Host ""
-        Write-Host "Build successful! Copying binary to docker-pi-hole/src/pihole-FTL..."
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "Docker build command failed with exit code $LASTEXITCODE"
+    exit $LASTEXITCODE
+}
 
-        # Determine repository root (parent of FTL)
-        $repoRoot = Split-Path $ftlDir -Parent
-        $destDir = Join-Path (Join-Path $repoRoot 'docker-pi-hole') 'src'
+# Copy the built binary to docker-pi-hole/src/
+# The build script may place the binary in the FTL root directory
+$ftlBinary = Join-Path $ftlDir 'pihole-FTL'
+if (Test-Path $ftlBinary) {
+    Write-Host ""
+    Write-Host "Build successful! Copying binary to docker-pi-hole/src/pihole-FTL..." -ForegroundColor Green
 
-        # Create dest directory if it doesn't exist
-        if (-not (Test-Path $destDir)) {
-            New-Item -ItemType Directory -Path $destDir -Force | Out-Null
-        }
+    # Determine repository root (parent of FTL)
+    $repoRoot = Split-Path $ftlDir -Parent
+    $destDir = Join-Path (Join-Path $repoRoot 'docker-pi-hole') 'src'
 
-        Copy-Item $ftlBinary (Join-Path $destDir 'pihole-FTL') -Force
-        Write-Host "Done!"
-        Write-Host ""
-        if (-not $suppressHint) {
-            Write-Host "You can now build docker-pi-hole with your local FTL binary:"
-            Write-Host "  .\build-docker.ps1 -l"
-        }
-    } else {
-        Write-Host ""
-        Write-Host "Warning: Built binary not found at $ftlBinary"
-        Write-Host "Check FTL/cmake/pihole-FTL or FTL/pihole-FTL"
+    # Create dest directory if it doesn't exist
+    if (-not (Test-Path $destDir)) {
+        New-Item -ItemType Directory -Path $destDir -Force | Out-Null
     }
+
+    Copy-Item $ftlBinary (Join-Path $destDir 'pihole-FTL') -Force
+    Write-Host "✓ Done!" -ForegroundColor Green
+    Write-Host ""
+    if (-not $suppressHint) {
+        Write-Host "You can now build docker-pi-hole with your local FTL binary:" -ForegroundColor Green
+        Write-Host "  .\build-docker.ps1 -Local" -ForegroundColor Cyan
+    }
+} else {
+    Write-Host ""
+    Write-Warning "Built binary not found at $ftlBinary"
+    Write-Host "Check FTL/cmake/pihole-FTL or FTL/pihole-FTL" -ForegroundColor Yellow
 }
 
 exit $LASTEXITCODE
