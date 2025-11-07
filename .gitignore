@@ -1,1 +1,11 @@
+# Cloned repository subdirectories
+pi-hole/
+FTL/
+web/
+docker-pi-hole/
+PADD/
+docs/
+docker-base-images/
+
+# Docker manual testing
 docker-manual-testing/etc-pihole
