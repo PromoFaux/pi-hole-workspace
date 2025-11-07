@@ -268,15 +268,6 @@ if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-# Check SSH connection to GitHub
-Write-Host "Testing SSH connection to GitHub..." -ForegroundColor Yellow
-$sshTest = ssh -T git@github.com 2>&1
-if ($LASTEXITCODE -ne 1) {  # SSH to GitHub returns exit code 1 on successful auth
-    Write-Warning "SSH connection to GitHub may not be properly configured."
-    Write-Host "SSH test output: $sshTest" -ForegroundColor Gray
-    Write-Host "Continuing anyway..." -ForegroundColor Yellow
-}
-
 # Clone each repository
 $successCount = 0
 foreach ($repo in $repositories) {
