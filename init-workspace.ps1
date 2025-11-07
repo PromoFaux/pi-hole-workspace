@@ -9,31 +9,31 @@ Write-Host "Initializing Pi-hole workspace..." -ForegroundColor Green
 $repositories = @(
     @{
         Name = "pi-hole"
-        Url = "git@github.com:pi-hole/pi-hole.git"
+        Url = "https://github.com/pi-hole/pi-hole.git"
     },
     @{
         Name = "FTL"
-        Url = "git@github.com:pi-hole/FTL.git"
+        Url = "https://github.com/pi-hole/FTL.git"
     },
     @{
         Name = "web"
-        Url = "git@github.com:pi-hole/web.git"
+        Url = "https://github.com/pi-hole/web.git"
     },
     @{
         Name = "docker-pi-hole"
-        Url = "git@github.com:pi-hole/docker-pi-hole.git"
+        Url = "https://github.com/pi-hole/docker-pi-hole.git"
     },
     @{
         Name = "PADD"
-        Url = "git@github.com:pi-hole/PADD.git"
+        Url = "https://github.com/pi-hole/PADD.git"
     },
     @{
         Name = "docs"
-        Url = "git@github.com:pi-hole/docs.git"
+        Url = "https://github.com/pi-hole/docs.git"
     },
     @{
         Name = "docker-base-images"
-        Url = "git@github.com:pi-hole/docker-base-images.git"
+        Url = "https://github.com/pi-hole/docker-base-images.git"
     }
 )
 
@@ -122,14 +122,14 @@ if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-# Check SSH connection to GitHub
-Write-Host "Testing SSH connection to GitHub..." -ForegroundColor Yellow
-$sshTest = ssh -T git@github.com 2>&1
-if ($LASTEXITCODE -ne 1) {  # SSH to GitHub returns exit code 1 on successful auth
-    Write-Warning "SSH connection to GitHub may not be properly configured."
-    Write-Host "SSH test output: $sshTest" -ForegroundColor Gray
-    Write-Host "Continuing anyway..." -ForegroundColor Yellow
-}
+## Check SSH connection to GitHub
+#Write-Host "Testing SSH connection to GitHub..." -ForegroundColor Yellow
+#$sshTest = ssh -T git@github.com 2>&1
+#if ($LASTEXITCODE -ne 1) {  # SSH to GitHub returns exit code 1 on successful auth
+#    Write-Warning "SSH connection to GitHub may not be properly configured."
+#    Write-Host "SSH test output: $sshTest" -ForegroundColor Gray
+#    Write-Host "Continuing anyway..." -ForegroundColor Yellow
+#}
 
 # Clone each repository
 $successCount = 0
