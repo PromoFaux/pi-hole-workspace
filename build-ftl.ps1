@@ -100,6 +100,7 @@ Write-Host ""
 
 docker run --rm `
     -e CI_ARCH=linux/amd64 `
+    -e TERM=xterm `
     -v "${ftlDir}:${workDir}" `
     -w "${workDir}" `
     ghcr.io/pi-hole/ftl-build:nightly `
