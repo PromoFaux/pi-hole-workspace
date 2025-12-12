@@ -104,7 +104,7 @@ docker run --rm `
     -v "${ftlDir}:${workDir}" `
     -w "${workDir}" `
     ghcr.io/pi-hole/ftl-build:nightly `
-    bash -c "dos2unix build.sh 2>/dev/null; $bashCommand"
+    bash -c "dos2unix build.sh 2>/dev/null; $bashCommand && ./pihole-FTL create-default-config pihole.toml"
 
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Docker build command failed with exit code $LASTEXITCODE"
@@ -129,6 +129,47 @@ if (Test-Path $ftlBinary) {
 
     Copy-Item $ftlBinary (Join-Path $destDir 'pihole-FTL') -Force
     Write-Host "✓ Done!" -ForegroundColor Green
+
+    # Generate default pihole.toml configuration file
+    # The file should have been created by the Docker build container
+    Write-Host ""
+    Write-Host "Checking for pihole.toml configuration..." -ForegroundColor Green
+    $configFile = Join-Path $ftlDir 'pihole.toml'
+
+    # Add a small delay to ensure file is synced from Docker volume
+    Start-Sleep -Milliseconds 500
+
+    if (Test-Path $configFile) {
+        Write-Host "✓ Generated pihole.toml" -ForegroundColor Green
+        
+        # Update documentation from the generated config
+        Write-Host ""
+        Write-Host "Updating FTL configuration documentation..." -ForegroundColor Green
+        $toolsDir = Join-Path $ftlDir 'tools'
+        $docsDir = Join-Path $repoRoot 'docs'
+        $docsConfigFile = Join-Path (Join-Path $docsDir 'docs') 'ftldns' | Join-Path -ChildPath 'configfile.md'
+        
+        if (Test-Path $toolsDir) {
+            $pythonScript = Join-Path $toolsDir 'pihole_toml_to_markdown.py'
+            if (Test-Path $pythonScript) {
+                $result = & python $pythonScript $configFile $docsConfigFile 2>&1
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Host "✓ Updated documentation at docs/docs/ftldns/configfile.md" -ForegroundColor Green
+                } else {
+                    Write-Host "⚠ Failed to generate documentation" -ForegroundColor Yellow
+                    Write-Host $result
+                }
+            } else {
+                Write-Host "⚠ pihole_toml_to_markdown.py not found at $pythonScript" -ForegroundColor Yellow
+            }
+        } else {
+            Write-Host "⚠ tools directory not found at $toolsDir" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "⚠ pihole.toml not found at $configFile" -ForegroundColor Yellow
+        Write-Host "   The Docker build may not have generated it successfully" -ForegroundColor Yellow
+    }
+
     Write-Host ""
     if (-not $suppressHint) {
         Write-Host "You can now build docker-pi-hole with your local FTL binary:" -ForegroundColor Green
