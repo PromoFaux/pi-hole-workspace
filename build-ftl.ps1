@@ -103,7 +103,7 @@ docker run --rm `
     -e TERM=xterm `
     -v "${ftlDir}:${workDir}" `
     -w "${workDir}" `
-    ghcr.io/pi-hole/ftl-build:nightly `
+    ghcr.io/pi-hole/ftl-build:latest `
     bash -c "dos2unix build.sh 2>/dev/null; $bashCommand && ./pihole-FTL create-default-config pihole.toml"
 
 if ($LASTEXITCODE -ne 0) {
