@@ -70,4 +70,4 @@ These apply when making changes intended for upstream contribution to any Pi-hol
 - **Branch targeting** — pull requests must target the `development` branch. Always ensure the `development` branch is merged into your working branch and conflicts resolved before a PR is ready.
 - **Line endings** — use Unix line endings (LF) in all commits across all sub-repos.
 - **Branding** — the correct spelling is **Pi-hole** (capital P, lowercase h, hyphen). Use this consistently in any generated text, commit messages, or documentation.
-- **DCO sign-off** — all commits to Pi-hole sub-repos must be signed off per the Pi-hole org's Developer Certificate of Origin policy. Always use `git commit -s` (which appends `Signed-off-by: Name <email>`) when committing to any sub-repo.
+- **DCO sign-off** — all commits across this workspace (including the workspace repo itself) must be signed off. Always use `git commit -s` (which appends `Signed-off-by: Name <email>`).
