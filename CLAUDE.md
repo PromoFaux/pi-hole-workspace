@@ -62,6 +62,7 @@ The `-Force` flag resets all sub-repos and **discards all local changes**. Never
 - FTL is built for `linux/amd64` via Docker even on Windows (handled automatically by `build-ftl.ps1`).
 - The `docker-manual-testing/` directory contains the `docker-compose.yml` used for local testing. The web interface is available at `http://localhost` when the container is running.
 - **Testing with custom volumes:** When mounting additional volumes for testing (e.g., `etc-pihole-phase1test/`), follow the naming pattern `docker-manual-testing/etc-pihole*`. These directories are ignored by `.gitignore` and won't be committed. Update `docker-compose.yml` to mount your test volume, run tests, then clean up the directory when done.
+- The `.github/` repository contains organization-level GitHub metadata including PR templates, issue templates, GitHub Actions workflows, and code of conduct. When creating pull requests to Pi-hole repositories, these templates provide structure and guidance for consistent issue reporting and PR descriptions.
 - When working with sub-repos, any new branch should be based on the `development` branch of that sub-repo.
 
 ## Pi-hole Contribution Guidelines
