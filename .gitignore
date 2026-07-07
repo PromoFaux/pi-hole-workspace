@@ -7,5 +7,7 @@ PADD/
 docs/
 docker-base-images/
 
-# Docker manual testing
-docker-manual-testing/etc-pihole
+# Docker manual testing — volume mount points
+# Volumes mounted in docker-compose are ignored; use the pattern
+# docker-manual-testing/etc-pihole* for testing different configurations
+docker-manual-testing/etc-pihole*

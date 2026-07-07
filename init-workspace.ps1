@@ -44,7 +44,8 @@ $repositories = @(
     "pi-hole/docker-pi-hole",
     "pi-hole/PADD",
     "pi-hole/docs",
-    "pi-hole/docker-base-images"
+    "pi-hole/docker-base-images",
+    "pi-hole/.github"
 )
 
 # Function to build repository URLs
