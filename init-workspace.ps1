@@ -48,6 +48,11 @@ $repositories = @(
     "pi-hole/.github"
 )
 
+# Map of repos that need custom output directory names (to avoid conflicts with special dirs)
+$repositoryAliases = @{
+    "pi-hole/.github" = "github-org-metadata"
+}
+
 # Function to build repository URLs
 function Get-RepositoryUrls {
     param(
@@ -272,6 +277,12 @@ if ($LASTEXITCODE -ne 1) {  # SSH to GitHub returns exit code 1 on successful au
 $successCount = 0
 foreach ($repo in $repositories) {
     $repoName = $repo.Split('/')[-1]
+
+    # Check if this repo has a custom alias (to avoid conflicts with special directory names)
+    if ($repositoryAliases.ContainsKey($repo)) {
+        $repoName = $repositoryAliases[$repo]
+    }
+
     $urls = Get-RepositoryUrls -Repo $repo
     if (Initialize-Repository -Name $repoName -SshUrl $urls.SshUrl -HttpsUrl $urls.HttpsUrl -UseFallbackHttps $useFallbackHttps -Force $Force -Quiet $Quiet) {
         $successCount++

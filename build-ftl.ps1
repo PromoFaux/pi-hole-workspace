@@ -5,7 +5,7 @@
 
 .DESCRIPTION
     Builds Pi-hole FTL in the official build container and copies the binary
-    to docker-pi-hole/src/pihole-FTL for use with build-docker.ps1 -Local
+    to docker-pi-hole/src/pihole-FTL for use with build-docker.ps1 --local
 
     This script searches upward from its location to find the repository's
     FTL/ directory, so it will continue to work if you move it around inside
@@ -173,7 +173,7 @@ if (Test-Path $ftlBinary) {
     Write-Host ""
     if (-not $suppressHint) {
         Write-Host "You can now build docker-pi-hole with your local FTL binary:" -ForegroundColor Green
-        Write-Host "  .\build-docker.ps1 -Local" -ForegroundColor Cyan
+        Write-Host "  .\build-docker.ps1 --local" -ForegroundColor Cyan
     }
 } else {
     Write-Host ""

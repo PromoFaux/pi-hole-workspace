@@ -37,7 +37,7 @@ This will clone all Pi-hole repositories and check them out to the `development`
 #### Build FTL for inclusion in the image
 ```powershell
 # Build FTL before docker and include the binary in the image
-.\build-docker.ps1 -l
+.\build-docker.ps1 --local
 
 # Start the test container
 .\run-docker.ps1

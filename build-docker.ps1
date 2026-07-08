@@ -18,7 +18,7 @@
     Build Docker image with default settings
 
 .EXAMPLE
-    .\build-docker.ps1 -l
+    .\build-docker.ps1 --local
     Build Docker image using existing local FTL binary
 
 .EXAMPLE

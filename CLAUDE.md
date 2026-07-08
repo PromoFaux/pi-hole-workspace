@@ -18,7 +18,7 @@ This is a workspace repository. The sub-repositories below are cloned into the w
 | `PADD/` | `pi-hole/PADD` | Pi-hole stats display |
 | `docs/` | `pi-hole/docs` | Documentation |
 | `docker-base-images/` | `pi-hole/docker-base-images` | Base Docker images |
-| `.github/` | `pi-hole/.github` | Organization-level GitHub metadata (workflows, templates, issue templates) |
+| `github-org-metadata/` | `pi-hole/.github` | Organization-level GitHub metadata (workflows, templates, issue templates) |
 | `docker-manual-testing/` | — | Local Docker Compose test environment |
 
 ## Build Scripts
@@ -31,7 +31,7 @@ All build/run scripts are PowerShell (`.ps1`) and live in the workspace root. Th
 | `build-ftl.ps1` | Build FTL binary using the official FTL build container |
 | `build-docker.ps1` | Build the `docker-pi-hole` Docker image |
 | `build-docker.ps1 -BuildFTL` | Build FTL first, then build Docker image (combined workflow) |
-| `build-docker.ps1 -l` | Build Docker image using an already-built local FTL binary |
+| `build-docker.ps1 --local` | Build Docker image using an already-built local FTL binary |
 | `run-docker.ps1` | Start the test container via docker-compose |
 | `run-docker.ps1 -Detach` | Start containers in background |
 | `run-docker.ps1 -Stop` | Stop and remove containers |
@@ -43,7 +43,7 @@ All build/run scripts are PowerShell (`.ps1`) and live in the workspace root. Th
 
 - **Test docker-pi-hole with upstream FTL:** `.\build-docker.ps1` then `.\run-docker.ps1`
 - **Test with local FTL changes:** `.\build-docker.ps1 -BuildFTL` then `.\run-docker.ps1`
-- **Iterate on FTL only:** `.\build-ftl.ps1` then `.\build-docker.ps1 -l` then `.\run-docker.ps1`
+- **Iterate on FTL only:** `.\build-ftl.ps1` then `.\build-docker.ps1 --local` then `.\run-docker.ps1`
 
 ## Hard Rules — Never Violate
 
@@ -62,7 +62,7 @@ The `-Force` flag resets all sub-repos and **discards all local changes**. Never
 - FTL is built for `linux/amd64` via Docker even on Windows (handled automatically by `build-ftl.ps1`).
 - The `docker-manual-testing/` directory contains the `docker-compose.yml` used for local testing. The web interface is available at `http://localhost` when the container is running.
 - **Testing with custom volumes:** When mounting additional volumes for testing (e.g., `etc-pihole-phase1test/`), follow the naming pattern `docker-manual-testing/etc-pihole*`. These directories are ignored by `.gitignore` and won't be committed. Update `docker-compose.yml` to mount your test volume, run tests, then clean up the directory when done.
-- The `.github/` repository contains organization-level GitHub metadata including PR templates, issue templates, GitHub Actions workflows, and code of conduct. When creating pull requests to Pi-hole repositories, these templates provide structure and guidance for consistent issue reporting and PR descriptions.
+- The `github-org-metadata/` directory (cloned from `pi-hole/.github`) contains organization-level GitHub metadata including PR templates, issue templates, GitHub Actions workflows, and code of conduct. It's stored with this name to prevent GitHub from treating it as the workspace repo's own `.github/` configuration. When creating pull requests to Pi-hole repositories, refer to these templates for structure and guidance on consistent issue reporting and PR descriptions.
 - When working with sub-repos, any new branch should be based on the `development` branch of that sub-repo.
 
 ## Pi-hole Contribution Guidelines
