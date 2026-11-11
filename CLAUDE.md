@@ -64,6 +64,8 @@ The `-Force` flag resets all sub-repos and **discards all local changes**. Never
 - **Testing with custom volumes:** When mounting additional volumes for testing (e.g., `etc-pihole-phase1test/`), follow the naming pattern `docker-manual-testing/etc-pihole*`. These directories are ignored by `.gitignore` and won't be committed. Update `docker-compose.yml` to mount your test volume, run tests, then clean up the directory when done.
 - The `github-org-metadata/` directory (cloned from `pi-hole/.github`) contains organization-level GitHub metadata including PR templates, issue templates, GitHub Actions workflows, and code of conduct. It's stored with this name to prevent GitHub from treating it as the workspace repo's own `.github/` configuration. When creating pull requests to Pi-hole repositories, refer to these templates for structure and guidance on consistent issue reporting and PR descriptions.
 - When working with sub-repos, any new branch should be based on the `development` branch of that sub-repo.
+- **Worktrees** live inside the repo they belong to: `<repo>/.worktrees/<purpose>` (excluded via the repo's local `info/exclude`). Never create worktrees in the workspace root.
+- **Drafts and notes** (blog drafts, release notes, PR reviews, advisory drafts, etc.) go in `scratch/`. The directory is tracked via `.gitkeep`; its contents are gitignored.
 
 ## Pi-hole Contribution Guidelines
 

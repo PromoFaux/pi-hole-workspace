@@ -1,0 +1,6 @@
+{
+  // Worktrees live at <repo>/.worktrees/<purpose> (depth 3 from the workspace root)
+  "git.repositoryScanMaxDepth": 3,
+  "git.detectWorktrees": true,
+  "git.autoRepositoryDetection": true
+}

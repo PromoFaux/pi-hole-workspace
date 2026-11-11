@@ -12,3 +12,6 @@ github-org-metadata/
 # Volumes mounted in docker-compose are ignored; use the pattern
 # docker-manual-testing/etc-pihole* for testing different configurations
 docker-manual-testing/etc-pihole*
+# Scratch area for drafts and notes (directory is kept, contents are ignored)
+scratch/*
+!scratch/.gitkeep
